@@ -1,0 +1,218 @@
+{% extends "layout2.html"%}
+{%from "_macros.html" import render_field%}
+{%block content%}
+    <div class="container">
+        <div class="row">
+            <h3>Pedido</h3>
+            <form action="/dispatch" method="POST">
+            <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+            {{render_field(form.nombre, class="form-control")}}
+            {{render_field(form.direccion, class="form-control")}}
+            {{render_field(form.telefono, class="form-control")}}
+            {{render_field(form.total, class="form-control")}}
+            <input type="submit" name="btn1" value="Agregar">
+            </form>
+            {{render_field(pizza_form.tamanioPizza, class="form-control")}}
+            {{render_field(pizza_form.jamon, class="form-control")}}
+            {{render_field(pizza_form.pinia, class="form-control")}}
+            {{render_field(pizza_form.champinones, class="form-control")}}
+            {{render_field(pizza_form.numero_pizzas, class="form-control")}}
+            <input type="hidden" id="id" name="id" value="">
+            <button name="agregar" id="agregar" onclick="guardarPizza()">Agregar</button>
+        </div>
+        <div class="row">
+            <h3>Pedido</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Tamaño</th>
+                        <th>Ingredientes</th>
+                        <th>Numero de pizzas</th>
+                        <th>Subtotal</th>
+                        <th>Eliminar</th>
+                        <th>Modificar</th>
+                    </tr>
+                </thead>
+                <tbody id="tblPizza">
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <h3>Ventas</h3>
+            <form action="/pizzeria" method="POST">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                {{render_field(busqueda_form.busqueda, class="form-control")}}
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </form>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Total</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for venta in ventas%}
+                    <tr>
+                        <td>{{venta.nombre}}</td>
+                        <td>{{venta.total}}</td>
+                        <td>{{venta.created_date}}</td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let pizzas = [];
+        document.getElementById('id').value = '';
+        cargarPizzas();
+    
+        function cargarPizzas(){
+            let tblPizza = document.getElementById('tblPizza');
+            tblPizza.innerHTML = '';
+            pizzas.forEach(pizza => {
+                let tr = document.createElement('tr');
+                let td1 = document.createElement('td');
+                td1.innerHTML = pizza.tamanio;
+                tr.appendChild(td1);
+                let td2 = document.createElement('td');
+                td2.innerHTML = pizza.ingredientes;
+                tr.appendChild(td2);
+                let td3 = document.createElement('td');
+                td3.innerHTML = pizza.numero_pizzas;
+                tr.appendChild(td3);
+                let td4 = document.createElement('td');
+                td4.innerHTML = pizza.subtotal;
+                tr.appendChild(td4);
+                let td5 = document.createElement('td');
+                let a = document.createElement('a');
+                a.innerHTML = 'Modificar';
+                a.onclick = function(){
+                    modificarPizza(pizza.id);
+                }
+                td5.appendChild(a);
+                tr.appendChild(td5);
+                let td6 = document.createElement('td');
+                let a2 = document.createElement('a');
+                a2.innerHTML = 'Eliminar';
+                a2.onclick = function(){
+                    eliminarPizza(pizza.id);
+                }
+                td6.appendChild(a2);
+                tr.appendChild(td6);
+                tblPizza.appendChild(tr);
+            });
+            document.getElementById('total').value = pizzas.reduce((acc, pizza) => acc + pizza.subtotal, 0);
+        }
+
+        function eliminarPizza(id){
+            pizzas = pizzas.filter(pizza => pizza.id != id);
+            cargarPizzas();
+        }
+
+        function modificarPizza(id){
+            let pizza = pizzas.find(pizza => pizza.id == id);
+            document.getElementsByName('tamanioPizza').forEach(tamanio => {
+                if(tamanio.value == pizza.tamanio){
+                    tamanio.checked = true;
+                }
+            });
+            if(pizza.ingredientes.includes('jamon')){
+                document.getElementById('jamon').checked = true;
+            }
+            if(pizza.ingredientes.includes('piña')){
+                document.getElementById('pinia').checked = true;
+            }
+            if(pizza.ingredientes.includes('champiñones')){
+                document.getElementById('champinones').checked = true;
+            }
+            document.getElementById('numero_pizzas').value = pizza.numero_pizzas;
+            document.getElementById('id').value = pizza.id;
+        }
+
+        function guardarPizza(){
+            if(document.getElementById('id').value != ''){
+                console.log('modificar');
+                let index = pizzas.findIndex(pizza => pizza.id == document.getElementById('id').value);
+                tamanios = document.getElementsByName('tamanioPizza');
+                let tamanio = '';
+                for(var i = 0; i < tamanios.length; i++){
+                    if(tamanios[i].checked){
+                        tamanio = tamanios[i].value;
+                        break;
+                    }
+                }
+                pizzas[index].tamanio = tamanio;
+            let ingredientes = [];
+            if(document.getElementById('jamon').checked){
+                ingredientes.push('jamon');
+            }
+            if(document.getElementById('pinia').checked){
+                ingredientes.push('piña');
+            }
+            if(document.getElementById('champinones').checked){
+                ingredientes.push('champiñones');
+            }
+            ingredientes = ingredientes.join(', ');
+                pizzas[index].ingredientes = ingredientes;
+                pizzas[index].numero_pizzas = document.getElementById('numero_pizzas').value;
+                pizzas[index].subtotal = calcularSubtotal(tamanio, document.getElementById('numero_pizzas').value, ingredientes);
+                document.getElementById('id').value = '';
+                cargarPizzas();
+                return;
+            }
+            console.log('agregar');
+            tamanios = document.getElementsByName('tamanioPizza');
+                let tamanio = '';
+                for(var i = 0; i < tamanios.length; i++){
+                    if(tamanios[i].checked){
+                        tamanio = tamanios[i].value;
+                        break;
+                    }
+                }
+                let ingredientes = [];
+            if(document.getElementById('jamon').checked){
+                ingredientes.push('jamon');
+            }
+            if(document.getElementById('pinia').checked){
+                ingredientes.push('piña');
+            }
+            if(document.getElementById('champinones').checked){
+                ingredientes.push('champiñones');
+            }
+            ingredientes = ingredientes.join(', ');
+            let pizza = {
+                id: pizzas.length + 1,
+                tamanio: tamanio,
+                ingredientes: ingredientes,
+                numero_pizzas: document.getElementById('numero_pizzas').value,
+                subtotal: calcularSubtotal(tamanio, document.getElementById('numero_pizzas').value, ingredientes)
+            }
+            pizzas.push(pizza);
+            cargarPizzas();
+        }
+
+        function calcularSubtotal(tamanio, numero_pizzas, ingredientes){
+            let precio = 0;
+            if(tamanio == 'chica'){
+                precio = 40;
+            }else if(tamanio == 'mediana'){
+                precio = 80;
+            }else if(tamanio == 'grande'){
+                precio = 120;
+            }
+            if(ingredientes.includes('jamon')){
+                precio += 10;
+            }
+            if(ingredientes.includes('piña')){
+                precio += 10;
+            }
+            if(ingredientes.includes('champiñones')){
+                precio += 10;
+            }
+            return precio * numero_pizzas;
+        }
+    </script>
+{%endblock%}
