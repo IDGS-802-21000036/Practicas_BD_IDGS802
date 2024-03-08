@@ -1,70 +1,197 @@
 {% extends "layout2.html"%}
 {%from "_macros.html" import render_field%}
 {%block content%}
-    <div class="container">
-        <div class="row">
-            <h3>Pedido</h3>
-            <form action="/dispatch" method="POST">
-            <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-            {{render_field(form.nombre, class="form-control")}}
-            {{render_field(form.direccion, class="form-control")}}
-            {{render_field(form.telefono, class="form-control")}}
-            {{render_field(form.total, class="form-control")}}
-            <input type="submit" name="btn1" value="Agregar">
-            </form>
-            {{render_field(pizza_form.tamanioPizza, class="form-control")}}
-            {{render_field(pizza_form.jamon, class="form-control")}}
-            {{render_field(pizza_form.pinia, class="form-control")}}
-            {{render_field(pizza_form.champinones, class="form-control")}}
-            {{render_field(pizza_form.numero_pizzas, class="form-control")}}
-            <input type="hidden" id="id" name="id" value="">
-            <button name="agregar" id="agregar" onclick="guardarPizza()">Agregar</button>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+
+            <div class="card-header fs-5 border-0 row">
+                <div class="col-md-12">
+                    <i class="fa-solid fa-location-dot"></i> Datos del Pedido
+                </div>
+            </div>
+            <div class="card-body border-0 row">
+                <form action="/dispatch" method="POST" id="formVenta" novalidate>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <input type="hidden" name="csrf_token"
+                                value="{{csrf_token()}}">
+
+                            <div class="col-3">
+                                {{render_field(form.nombre,
+                                class="form-control")}}
+                            </div>
+                            <div class="col-3">
+                                {{render_field(form.direccion,
+                                class="form-control")}}
+                            </div>
+                            <div class="col-3">
+                                {{render_field(form.telefono,
+                                class="form-control")}}
+                            </div>
+                            <div class="col-3">
+                                {{render_field(form.fecha_venta,
+                                class="form-control")}}
+                            </div>
+                            <div class="col-md-3 ">
+                                {{render_field(form.total,
+                                class="form-control")}}
+                            </div>
+                            <div class="col-md-5">
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmModal">
+                                    Enviar
+                                  </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="row">
-            <h3>Pedido</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Tamaño</th>
-                        <th>Ingredientes</th>
-                        <th>Numero de pizzas</th>
-                        <th>Subtotal</th>
-                        <th>Eliminar</th>
-                        <th>Modificar</th>
-                    </tr>
-                </thead>
-                <tbody id="tblPizza">
-                </tbody>
-            </table>
-        </div>
-        <div class="row">
-            <h3>Ventas</h3>
-            <form action="/pizzeria" method="POST">
-                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-                {{render_field(busqueda_form.busqueda, class="form-control")}}
-                <button type="submit" class="btn btn-primary">Buscar</button>
-            </form>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Total</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {%for venta in ventas%}
-                    <tr>
-                        <td>{{venta.nombre}}</td>
-                        <td>{{venta.total}}</td>
-                        <td>{{venta.created_date}}</td>
-                    </tr>
-                    {%endfor%}
-                </tbody>
-            </table>
-        </div>
+
     </div>
-    <script>
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header fs-5 border-0 row">
+                <div class="col-md-12">
+                    <i class="fa-solid fa-location-dot"></i> Agregar pizza
+                </div>
+            </div>
+            <div class="card-body border-0 row">
+                <input type="hidden" id="id" name="id" value>
+                <div class="col-3">
+                    {{render_field(pizza_form.tamanioPizza, class="form-control")}}
+                </div>
+                <div class="col-3">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Ingredientes</h5>
+                            </div>
+                            <div class="col-12">
+                                {{render_field(pizza_form.jamon)}}
+                            </div>
+                            <div class="col-12">
+                                {{render_field(pizza_form.pinia)}}
+                            </div>
+                            <div class="col-12">
+                                {{render_field(pizza_form.champinones)}}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="col-3">
+                    {{render_field(pizza_form.numero_pizzas, class="form-control")}}
+                </div>
+                <div class="col-3">
+                    <button name="agregar" id="agregar" class="btn btn-primary"
+            onclick="guardarPizza()">Agregar</button>
+                </div>
+            </div>
+        </div>    
+    </div>
+
+
+    <div class="col-md-6">
+        <h3>Pedido</h3>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Tamaño</th>
+                    <th>Ingredientes</th>
+                    <th>Numero de pizzas</th>
+                    <th>Subtotal</th>
+                    <th>Modificar</th>
+                    <th>Eliminar</th>
+                </tr>
+            </thead>
+            <tbody id="tblPizza">
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h3>Ventas</h3>
+        <form action="/pizzeria" method="POST">
+            <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+            <div class="container">
+                <div class="row">
+                    <div class="col-6">
+                        {{render_field(busqueda_form.busqueda, class="form-control")}}
+                    </div>
+                    <div class="col-6">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-6">
+                                    {{render_field(busqueda_form.dia, class="form-control")}}
+                                </div>
+                                <div class="col-6">
+                                    {{render_field(busqueda_form.mes, class="form-control")}}
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="col-8">
+                        <button type="submit" class="btn btn-primary">Buscar</button>
+                    </div>
+                </div>
+            </div>
+            
+            
+            
+            
+        </form>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%for venta in ventas%}
+                <tr>
+                    <td>{{venta.nombre}}</td>
+                    <td>{{venta.total}}</td>
+                    <td>{{venta.fecha_venta}}</td>
+                </tr>
+                {%endfor%}
+                <tr>
+                    <td>Total</td>
+                    <td>{{total}}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalLabel">Confirmar envío</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          ¿Estás seguro de enviar el formulario?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" onclick="enviarFormulario()">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+    function enviarFormulario() {
+        document.getElementById("formVenta").submit();
+      }
         let pizzas = [];
         document.getElementById('id').value = '';
         cargarPizzas();
@@ -87,16 +214,18 @@
                 td4.innerHTML = pizza.subtotal;
                 tr.appendChild(td4);
                 let td5 = document.createElement('td');
-                let a = document.createElement('a');
+                let a = document.createElement('button');
                 a.innerHTML = 'Modificar';
+                a.classList.add('btn', 'btn-warning');
                 a.onclick = function(){
                     modificarPizza(pizza.id);
                 }
                 td5.appendChild(a);
                 tr.appendChild(td5);
                 let td6 = document.createElement('td');
-                let a2 = document.createElement('a');
+                let a2 = document.createElement('button');
                 a2.innerHTML = 'Eliminar';
+                a2.classList.add('btn', 'btn-danger');
                 a2.onclick = function(){
                     eliminarPizza(pizza.id);
                 }

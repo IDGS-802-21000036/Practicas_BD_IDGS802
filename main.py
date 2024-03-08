@@ -1,11 +1,12 @@
 from flask import Flask, request, render_template, Response, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from flask import flash
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import db
 from models import Alumnos, Venta
 from config import DevelopmentConfig
 import forms
+from sqlalchemy.sql import func, extract
 from flask import g
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -34,13 +35,20 @@ def pizzeria():
     pizza_form = forms.PizzaForm(request.form)
     busqueda_form = forms.BusquedaForm(request.form)
     if request.method == "POST":
-        option = request.args.get('Busqueda')
-        ventas = buscar_ventas(option)
+        print("entro al post")
+        option = request.form.get('busqueda')
+        dia = request.form.get("dia")
+        mes = request.form.get("mes")
+        print(option)
+        ventas = buscar_ventas(option, dia, mes)
         print(ventas)
     else:
-        ventas = buscar_ventas("Dia")
+        ventas = buscar_ventas("dia", datetime.now().weekday(), datetime.now().month)
         print(ventas)
-    return render_template("ABC_Pizzeria.html", form = venta_form, pizza_form = pizza_form, busqueda_form = busqueda_form, ventas = ventas)
+    total = 0
+    for venta in ventas:
+        total += venta.total
+    return render_template("ABC_Pizzeria.html", form = venta_form, pizza_form = pizza_form, busqueda_form = busqueda_form, ventas = ventas, total = total)
 
 
 
@@ -85,8 +93,10 @@ def maestro():
 @app.route('/dispatch', methods=['POST'])
 def dispatch():
     venta_form = forms.VentaForm(request.form)
+    print("validando...")
+    print(request.method)
     if request.method == "POST" and venta_form.validate():
-        venta = Venta(nombre = venta_form.nombre.data, direccion = venta_form.direccion.data, telefono = venta_form.telefono.data, total = venta_form.total.data)
+        venta = Venta(nombre = venta_form.nombre.data, direccion = venta_form.direccion.data, telefono = venta_form.telefono.data, total = venta_form.total.data, fecha_venta = venta_form.fecha_venta.data)
         db.session.add(venta)
         db.session.commit()
         flash("Se ha realizado la venta")
@@ -99,11 +109,11 @@ def ABMaestro():
     
     return render_template("ABC_Maestro.html", form = maestro_form, maestros = maestros)
 
-def buscar_ventas(option):
-    if option == "Dia":
-        ventas = Venta.query.filter(Venta.created_date == datetime.now().date()).all()
-    elif option == "Mes":
-        ventas = Venta.query.filter(Venta.created_date == datetime.now().month()).all()
+def buscar_ventas(option, dia, mes):
+    if option == "dia":
+        ventas = Venta.query.filter(func.DAYOFWEEK(Venta.fecha_venta) == dia).all()
+    elif option == "mes":
+        ventas = Venta.query.filter(extract('month', Venta.fecha_venta) == mes).all()
     return ventas
 
 
